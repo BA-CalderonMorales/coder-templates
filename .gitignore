@@ -1,2 +1,21 @@
 # Ignore tar archives
 *.tar
+
+# Environment variables
+.env
+.env.*
+
+# Secrets and keys
+*.pem
+*.key
+*.cert
+*.crt
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
