@@ -232,7 +232,7 @@ resource "docker_container" "workspace" {
 
   count = data.coder_workspace.me.start_count
 
-  # image = "codercom/enterprise-base:ubuntu"
+  # Using our locally built image
   image = "coder-terminal-jarvis-playground:latest"
 
   # Uses lower() to avoid Docker restriction on container names.
