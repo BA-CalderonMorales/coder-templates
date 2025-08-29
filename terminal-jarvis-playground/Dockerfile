@@ -4,6 +4,8 @@ LABEL description="Development environment for Terminal-Jarvis"
 LABEL project="terminal-jarvis"
 LABEL maintainer="coder"
 
+USER root
+
 # Install Node.js and Git
 RUN apt-get update && \
     apt-get install -y curl git && \
@@ -11,3 +13,5 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+USER coder
