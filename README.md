@@ -41,3 +41,24 @@ The template directory contains:
 - `Dockerfile`: Defines the development environment
 - `main.tf`: Terraform configuration for the Coder workspace
 - Additional configuration files as needed
+
+## Cloud Deployment Models
+
+Guides for running this template on common cloud free tiers / low-cost infrastructure are available:
+
+- [Docker Desktop (Local Baseline)](docs/deployment_models/DockerDesktop.md)
+- [GCP Deployment (Always Free)](docs/deployment_models/GCP.md)
+- [AWS Deployment (Free Tier)](docs/deployment_models/AWS.md)
+- [Azure Deployment (Free / Low-Cost)](docs/deployment_models/Azure.md)
+
+Tracking constraints and resource caveats:
+- [Limitations & Constraints](docs/deployment_models/limitations.md)
+
+Each guide covers:
+- Recommended instance sizes & limits
+- Optional swap and resource tuning
+- Building & pushing the workspace image
+- Terraform variable usage (`enable_jetbrains_gateway`, `workspace_image`, resource limits)
+- Upgrade and hardening paths
+
+If you plan to contribute another provider (e.g., DigitalOcean, Hetzner), follow the same structure under `docs/deployment_models/` and link it here.
