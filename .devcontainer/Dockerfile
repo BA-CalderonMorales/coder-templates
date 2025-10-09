@@ -21,6 +21,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Node.js and npm (LTS version via NodeSource)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Terraform (latest stable)
 # Use /etc/os-release to get the distro codename instead of lsb_release which
 # may not be available in minimal build images. This prevents creating a
