@@ -4,43 +4,67 @@ This repository contains templates and utilities for creating consistent develop
 
 ## Purpose
 
-The `start.windows.sh` script packages the Terminal-Jarvis development environment template into a portable tar archive (`.tar`). This is a crucial step in the Coder template workflow:
+This repository provides multi-provider Coder templates for the Terminal-Jarvis development environment. Each provider has its own directory with tailored configurations for different deployment targets.
 
-1. Define the development environment in the `terminal-jarvis-playground` directory
-2. Run `start.windows.sh` to create `terminal-jarvis-playground.tar`
-3. Upload the generated `.tar` file to Coder as a new template
-4. Coder uses this template to create consistent development environments for all team members
+The workflow for using these templates:
 
-This workflow ensures that every developer gets the same environment with all necessary tools (Node.js, Git, etc.) pre-configured.
+1. Choose your deployment target (local Docker or cloud provider)
+2. Navigate to the appropriate provider directory
+3. Package the template into a `.tar` archive
+4. Upload the generated `.tar` file to Coder as a new template
+5. Coder uses this template to create consistent development environments for all team members
 
-### Current Template
+This ensures that every developer gets the same environment with all necessary tools (Node.js, Git, etc.) pre-configured, regardless of where it's deployed.
 
-- `terminal-jarvis-playground`: A development environment for Terminal-Jarvis with Node.js and Git support.
+## Available Templates
 
-### Usage
+### Terminal-Jarvis Playground
 
-To package the template environment, use the appropriate script for your operating system:
+A development environment for Terminal-Jarvis with Node.js 20 and Git support.
+
+**Providers:**
+
+- **`local-docker/`** - Local Docker deployment with VS Code (code-server) and JetBrains IDE support
+  - Best for local development and testing
+  - Uses Docker Desktop or Docker Engine
+  - See [local-docker/README.md](terminal-jarvis-playground/local-docker/README.md)
+
+- **`gcp/`** - Google Compute Engine deployment with code-server
+  - Ephemeral VM instances with persistent root disk
+  - Always Free tier eligible (e2-micro)
+  - Code-server for browser-based VS Code
+  - See [gcp/README.md](terminal-jarvis-playground/gcp/README.md)
+
+## Usage
+
+### Local Docker
 
 ```bash
-# For Windows
-./start.windows.sh
-
-# For macOS
-./start.mac.sh
-
-# For Linux
-./start.linux.sh
+cd terminal-jarvis-playground/local-docker
+tar -cf ../../terminal-jarvis-playground-local.tar .
 ```
 
-Any of these scripts will create:
-- `terminal-jarvis-playground.tar`: Contains the basic Node.js development environment
+Upload `terminal-jarvis-playground-local.tar` to Coder.
 
-### Template Structure
+### GCP
 
-The template directory contains:
-- `Dockerfile`: Defines the development environment
-- `main.tf`: Terraform configuration for the Coder workspace
-- Additional configuration files as needed
+```bash
+cd terminal-jarvis-playground/gcp
+tar -cf ../terminal-jarvis-playground-gcp.tar .
+```
+
+Upload `terminal-jarvis-playground-gcp.tar` to Coder.
+
+### Legacy Scripts
+
+The root-level scripts (`start.windows.sh`, `start.mac.sh`, `start.linux.sh`) are maintained for backward compatibility and currently package the local-docker template.
+
+## Template Structure
+
+Each provider directory contains:
+- `Dockerfile` - Defines the development environment image
+- `main.tf` - Terraform configuration for the Coder workspace
+- `README.md` - Provider-specific setup and usage instructions
 
 ## Cloud Deployment Models
 
