@@ -16,17 +16,7 @@ The full filesystem is preserved when the workspace restarts, as Coder persists 
 
 ## Prerequisites
 
-### 1. Authentication
-
-Ensure `coderd` runs in an authenticated GCP environment:
-
-```bash
-gcloud auth application-default login
-```
-
-For other authentication methods, see [Terraform GCP Provider docs](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication).
-
-### 2. Service Account Setup
+### 1. Service Account Setup
 
 Create a GCP Service Account with appropriate permissions:
 
@@ -43,7 +33,39 @@ Create a GCP Service Account with appropriate permissions:
 9. Click **Add Key** → **Create new key**
 10. Select **JSON** and download the key file
 
-You'll provide this JSON key to Coder during template setup.
+### 2. Authentication Options
+
+This template supports two authentication methods:
+
+#### Option A: Per-Workspace Credentials (Recommended for individual use)
+
+When creating a workspace, you'll paste the JSON key content into Coder's UI:
+
+1. Open your downloaded JSON key file in a text editor
+2. Copy the entire contents (including the curly braces)
+3. When creating a workspace in Coder, paste this into the `gcp_credentials` field
+4. Coder stores this securely and marks it as sensitive
+
+**Security Notes:**
+- Never commit JSON key files to git repositories
+- The `gcp_credentials` variable is marked as sensitive (won't appear in logs)
+- Each workspace can use different credentials if needed
+
+#### Option B: Server-Level Ambient Credentials (For shared Coder deployments)
+
+If your Coder server runs in an authenticated GCP environment:
+
+```bash
+# On the machine running coderd
+gcloud auth application-default login
+
+# OR set environment variable
+export GOOGLE_CREDENTIALS="$(cat /path/to/key.json)"
+```
+
+When using ambient credentials, leave the `gcp_credentials` template variable empty. The provider will automatically use the server's authentication.
+
+For other authentication methods, see [Terraform GCP Provider docs](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication).
 
 ## Setup Instructions
 
@@ -66,7 +88,8 @@ This creates `terminal-jarvis-playground/terminal-jarvis-playground-gcp.tar`.
 3. Upload `terminal-jarvis-playground-gcp.tar`
 4. Configure template variables:
 
-   - `project_id`: Your GCP project ID
+   - `project_id`: Your GCP project ID (required)
+   - `gcp_credentials`: Service account JSON key content (optional - paste entire JSON file contents)
    - `zone`: GCP zone (default: `us-central1-a`)
    - `machine_type`: VM size (default: `e2-medium`)
    - `disk_size`: Persistent disk size in GB (default: `30`)

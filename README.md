@@ -32,6 +32,7 @@ A development environment for Terminal-Jarvis with Node.js 20 and Git support.
 - **`gcp/`** - Google Compute Engine deployment with code-server
   - Ephemeral VM instances with persistent root disk
   - Always Free tier eligible (e2-micro)
+  - Secure service account authentication with sensitive variable support
   - Code-server for browser-based VS Code
   - See [gcp/README.md](terminal-jarvis-playground/gcp/README.md)
 
@@ -55,9 +56,18 @@ tar -cf ../terminal-jarvis-playground-gcp.tar .
 
 Upload `terminal-jarvis-playground-gcp.tar` to Coder.
 
-### Legacy Scripts
+### Quick Packaging Scripts
 
-The root-level scripts (`start.windows.sh`, `start.mac.sh`, `start.linux.sh`) are maintained for backward compatibility and currently package the local-docker template.
+Root-level packaging scripts are available for convenience:
+
+```bash
+# Package the default template (terminal-jarvis-playground)
+./package.linux.sh   # Linux
+./package.mac.sh     # macOS
+./package.windows.sh # Windows (Git Bash/WSL)
+```
+
+These scripts package the main `terminal-jarvis-playground/` template for upload to Coder.
 
 ## Template Structure
 

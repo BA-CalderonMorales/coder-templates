@@ -3,7 +3,9 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(terraform init:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
