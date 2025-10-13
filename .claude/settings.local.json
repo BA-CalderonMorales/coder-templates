@@ -5,7 +5,8 @@
       "Bash(mv:*)",
       "Bash(tree:*)",
       "Bash(terraform init:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(./package.linux.sh)"
     ],
     "deny": [],
     "ask": []
