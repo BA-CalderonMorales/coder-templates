@@ -12,13 +12,13 @@ This repository contains Coder workspace templates for creating consistent, port
 
 ```bash
 # Package template for upload to Coder (Linux)
-./start.linux.sh
+./package.linux.sh
 
 # macOS
-./start.mac.sh
+./package.mac.sh
 
 # Windows
-./start.windows.sh
+./package.windows.sh
 ```
 
 These scripts create `terminal-jarvis-playground.tar` containing the Terraform template and related files.

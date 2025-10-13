@@ -48,10 +48,18 @@ variable "disk_size" {
   default     = 30
 }
 
+variable "gcp_credentials" {
+  description = "GCP service account JSON key content (optional - falls back to ambient credentials if not provided)"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 ### Data Sources
 provider "google" {
-  project = var.project_id
-  zone    = var.zone
+  project     = var.project_id
+  zone        = var.zone
+  credentials = var.gcp_credentials
 }
 
 data "coder_provisioner" "me" {}
