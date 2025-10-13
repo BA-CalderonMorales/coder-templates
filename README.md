@@ -36,38 +36,54 @@ A development environment for Terminal-Jarvis with Node.js 20 and Git support.
   - Code-server for browser-based VS Code
   - See [gcp/README.md](terminal-jarvis-playground/gcp/README.md)
 
-## Usage
+## Quick Start
 
-### Local Docker
+The easiest way to package templates is using the provided packaging scripts:
 
-```bash
-cd terminal-jarvis-playground/local-docker
-tar -cf ../../terminal-jarvis-playground-local.tar .
-```
+### Interactive Mode
 
-Upload `terminal-jarvis-playground-local.tar` to Coder.
-
-### GCP
+Run the script without arguments to get a menu:
 
 ```bash
-cd terminal-jarvis-playground/gcp
-tar -cf ../terminal-jarvis-playground-gcp.tar .
-```
-
-Upload `terminal-jarvis-playground-gcp.tar` to Coder.
-
-### Quick Packaging Scripts
-
-Root-level packaging scripts are available for convenience:
-
-```bash
-# Package the default template (terminal-jarvis-playground)
 ./package.linux.sh   # Linux
 ./package.mac.sh     # macOS
 ./package.windows.sh # Windows (Git Bash/WSL)
 ```
 
-These scripts package the main `terminal-jarvis-playground/` template for upload to Coder.
+You'll see:
+```
+Available templates:
+  1) local-docker - Local Docker deployment
+  2) gcp - Google Compute Engine deployment
+  3) all - Package both templates
+
+Select template to package (1/2/3):
+```
+
+### Command-Line Mode
+
+Pass the template name directly:
+
+```bash
+# Package specific template
+./package.linux.sh local-docker  # Creates terminal-jarvis-playground-local.tar
+./package.linux.sh gcp           # Creates terminal-jarvis-playground-gcp.tar
+./package.linux.sh all           # Creates both tar files
+
+# Or use numeric shortcuts
+./package.linux.sh 1             # local-docker
+./package.linux.sh 2             # gcp
+./package.linux.sh 3             # both
+```
+
+### Next Steps
+
+1. Run the packaging script for your chosen deployment target
+2. Navigate to your Coder dashboard
+3. Go to Templates → Create Template
+4. Upload the generated `.tar` file
+5. Configure template variables (see provider-specific README files)
+6. Create a workspace from your template
 
 ## Template Structure
 
