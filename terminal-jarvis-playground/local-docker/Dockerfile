@@ -44,6 +44,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # Install uv (Python package manager) for coder user
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Install vinw (interactive file tree viewer with git tracking)
+RUN git clone https://github.com/willyv3/vinw.git /tmp/vinw && \
+    cd /tmp/vinw && \
+    . "$HOME/.cargo/env" && \
+    make install && \
+    rm -rf /tmp/vinw
+
 # Set up environment
 ENV PATH="/home/coder/.cargo/bin:$PATH"
 ENV RUST_LOG="debug"
