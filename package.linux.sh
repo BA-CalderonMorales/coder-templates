@@ -21,23 +21,23 @@ case "$choice" in
   1|local-docker)
     echo "Packaging local-docker template..."
     cd terminal-jarvis-playground/local-docker
-    tar -cf ../../terminal-jarvis-playground-local.tar .
+    tar -cf ../../terminal-jarvis-playground-local.tar --exclude='.terraform' --exclude='.terraform.lock.hcl' .
     cd ../..
     echo "Created: terminal-jarvis-playground-local.tar"
     ;;
   2|gcp)
     echo "Packaging gcp template..."
     cd terminal-jarvis-playground/gcp
-    tar -cf ../../terminal-jarvis-playground-gcp.tar .
+    tar -cf ../../terminal-jarvis-playground-gcp.tar --exclude='.terraform' --exclude='.terraform.lock.hcl' .
     cd ../..
     echo "Created: terminal-jarvis-playground-gcp.tar"
     ;;
   3|all)
     echo "Packaging all templates..."
     cd terminal-jarvis-playground/local-docker
-    tar -cf ../../terminal-jarvis-playground-local.tar .
+    tar -cf ../../terminal-jarvis-playground-local.tar --exclude='.terraform' --exclude='.terraform.lock.hcl' .
     cd ../gcp
-    tar -cf ../../terminal-jarvis-playground-gcp.tar .
+    tar -cf ../../terminal-jarvis-playground-gcp.tar --exclude='.terraform' --exclude='.terraform.lock.hcl' .
     cd ../..
     echo "Created: terminal-jarvis-playground-local.tar"
     echo "Created: terminal-jarvis-playground-gcp.tar"
