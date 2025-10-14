@@ -26,7 +26,11 @@ locals {
 
 ### Variables
 variable "project_id" {
-  description = "GCP project ID"
+  description = <<-EOT
+    GCP project ID
+
+    Find your project ID: https://console.cloud.google.com/welcome?project=terminal-jarvis-playground
+  EOT
   type        = string
 }
 
@@ -39,13 +43,13 @@ variable "zone" {
 variable "machine_type" {
   description = "GCP machine type (e.g., e2-micro for free tier)"
   type        = string
-  default     = "e2-medium"
+  default     = "e2-micro"
 }
 
 variable "disk_size" {
   description = "Persistent disk size in GB"
   type        = number
-  default     = 30
+  default     = 16
 }
 
 variable "gcp_credentials" {
@@ -177,10 +181,10 @@ resource "google_compute_disk" "root" {
   }
 
   labels = {
-    "coder_owner"          = data.coder_workspace_owner.me.name
-    "coder_owner_id"       = data.coder_workspace_owner.me.id
-    "coder_workspace_id"   = data.coder_workspace.me.id
-    "coder_workspace_name" = data.coder_workspace.me.name
+    "coder_owner"          = lower(data.coder_workspace_owner.me.name)
+    "coder_owner_id"       = lower(data.coder_workspace_owner.me.id)
+    "coder_workspace_id"   = lower(data.coder_workspace.me.id)
+    "coder_workspace_name" = lower(data.coder_workspace.me.name)
   }
 }
 
@@ -219,9 +223,9 @@ resource "google_compute_instance" "workspace" {
   }
 
   labels = {
-    "coder_owner"          = data.coder_workspace_owner.me.name
-    "coder_owner_id"       = data.coder_workspace_owner.me.id
-    "coder_workspace_id"   = data.coder_workspace.me.id
-    "coder_workspace_name" = data.coder_workspace.me.name
+    "coder_owner"          = lower(data.coder_workspace_owner.me.name)
+    "coder_owner_id"       = lower(data.coder_workspace_owner.me.id)
+    "coder_workspace_id"   = lower(data.coder_workspace.me.id)
+    "coder_workspace_name" = lower(data.coder_workspace.me.name)
   }
 }
