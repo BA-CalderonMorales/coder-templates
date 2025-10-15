@@ -78,10 +78,6 @@ resource "coder_agent" "main" {
   startup_script = <<-EOT
     set -e
 
-    # Install code-server
-    curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
-    /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
-
     # Prepare user home with default files on first start
     if [ ! -f ~/.init_done ]; then
       cp -rT /etc/skel ~
@@ -149,24 +145,32 @@ resource "coder_agent" "main" {
   }
 }
 
-### Code-Server App
-resource "coder_app" "code-server" {
-  agent_id     = coder_agent.main.id
-  slug         = "code-server"
-  display_name = "code-server"
-  url          = "http://localhost:13337/?folder=/home/coder"
-  icon         = "/icon/code.svg"
-  subdomain    = false
-  share        = "owner"
+### Development Tools
+### Code-Server module provides VS Code in the browser
+module "code-server" {
+  count   = data.coder_workspace.me.start_count
+  source  = "registry.coder.com/modules/code-server/coder"
+  version = "~> 1.0"
 
-  healthcheck {
-    url       = "http://localhost:13337/healthz"
-    interval  = 5
-    threshold = 6
-  }
+  agent_id = coder_agent.main.id
+  order    = 1
 }
 
 ### GCP Infrastructure
+
+# Firewall rule to allow SSH access for debugging
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "coder-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}-ssh"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["coder-workspace"]
+}
 
 # Persistent root disk
 resource "google_compute_disk" "root" {
@@ -202,6 +206,8 @@ resource "google_compute_instance" "workspace" {
     }
   }
 
+  tags = ["coder-workspace"]
+
   boot_disk {
     source      = google_compute_disk.root.self_link
     auto_delete = false
@@ -214,7 +220,40 @@ resource "google_compute_instance" "workspace" {
     "coder_workspace_name" = data.coder_workspace.me.name
   }
 
-  metadata_startup_script = coder_agent.main.init_script
+  metadata_startup_script = <<-SCRIPT
+    #!/bin/bash
+    set -euo pipefail
+
+    # Install Docker if not already installed
+    if ! command -v docker &> /dev/null; then
+      curl -fsSL https://get.docker.com | sh
+      systemctl enable docker
+      systemctl start docker
+    fi
+
+    # Create persistent home directory on host
+    mkdir -p /home/coder
+
+    # Stop and remove any existing container
+    CONTAINER_NAME="coder-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}"
+    docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+    # Pull the workspace image (use ubuntu:22.04 as fallback for now)
+    # TODO: Replace with actual image from registry
+    if ! docker image inspect coder-terminal-jarvis-playground:latest &> /dev/null; then
+      docker pull ubuntu:22.04
+      docker tag ubuntu:22.04 coder-terminal-jarvis-playground:latest
+    fi
+
+    # Run the workspace container with the Coder agent
+    docker run -d \
+      --name "$CONTAINER_NAME" \
+      --restart unless-stopped \
+      -e CODER_AGENT_TOKEN="${coder_agent.main.token}" \
+      -v /home/coder:/home/coder \
+      coder-terminal-jarvis-playground:latest \
+      sh -c "${coder_agent.main.init_script}"
+  SCRIPT
 
   service_account {
     scopes = [
