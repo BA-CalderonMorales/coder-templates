@@ -8,9 +8,19 @@ This template provisions:
 
 - **GCP Compute Instance** (ephemeral) - Stopped when workspace is stopped
 - **GCP Persistent Disk** (persistent) - Root filesystem that persists across restarts
-- **Code-Server** - VS Code accessible through browser on port 13337
-- **Node.js 20** - Pre-installed with npm
+- **Coder Agent** - Runs as systemd service directly on the VM (no Docker)
+- **Code-Server** - VS Code accessible through browser, installed on first startup
+- **Node.js 20** - Installed after agent connects
 - **Git** - Pre-configured with your Coder user details
+
+### Design Philosophy
+
+This template uses a bare VM approach (no Docker) for maximum simplicity and debuggability:
+
+1. **Fast Initial Connection** - Minimal startup script installs only curl and ca-certificates
+2. **Agent-First** - Coder agent starts within ~30 seconds and connects to Coder server
+3. **Progressive Enhancement** - Development tools (git, Node.js, build-essential, code-server) install in the background after the agent connects
+4. **Easy Debugging** - Direct SSH access, systemd service logs via journalctl
 
 The full filesystem is preserved when the workspace restarts, as Coder persists the root volume.
 
@@ -135,28 +145,32 @@ Once the workspace starts:
 
 ### Adding More Tools
 
-Edit `Dockerfile` to install additional packages:
-
-```dockerfile
-RUN apt-get update && \
-    apt-get install -y your-package-here && \
-    apt-get clean
-```
-
-### Startup Commands
-
-Edit the `startup_script` in `main.tf` to run commands on workspace start:
+Edit the `startup_script` in the `coder_agent` resource in `main.tf`:
 
 ```hcl
 startup_script = <<-EOT
   set -e
 
-  # Your custom startup commands here
-  npm install -g your-tool
+  # Install additional tools after agent connects
+  if [ ! -f ~/.tools_installed ]; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      git \
+      wget \
+      vim \
+      htop \
+      build-essential \
+      your-package-here
 
-  # Install code-server
-  curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
-  /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
+    touch ~/.tools_installed
+  fi
+
+  # Your custom startup commands here
+  npm install -g your-global-tool
+
+  # code-server installation (already included)
+  if ! command -v code-server &> /dev/null; then
+    curl -fsSL https://code-server.dev/install.sh | sh -s -- --version 4.96.2
+  fi
 EOT
 ```
 
@@ -174,22 +188,54 @@ Common machine types:
 ### Workspace fails to start
 
 Check:
-1. Service account has correct IAM roles
+1. Service account has correct IAM roles (Compute Admin, Service Account User)
 2. Project ID is correct
 3. Zone/region quota limits
 4. GCP API is enabled (Compute Engine API)
 
-### Can't access code-server
+### Agent not connecting
 
-1. Wait ~30 seconds for code-server to start
-2. Check startup logs in Coder dashboard
-3. SSH into workspace: `coder ssh <workspace>` and check `/tmp/code-server.log`
+SSH into the VM to debug:
+
+```bash
+# List running instances
+gcloud compute instances list --project=YOUR_PROJECT_ID
+
+# SSH into the VM
+gcloud compute ssh INSTANCE_NAME --zone=ZONE --project=PROJECT_ID
+
+# Check startup script logs
+sudo journalctl -u google-startup-scripts.service --no-pager | tail -100
+
+# Check agent service status
+sudo systemctl status coder-agent
+
+# View agent logs in real-time
+sudo journalctl -u coder-agent -f
+
+# Check if coder user was created
+id coder
+
+# Verify agent init script exists
+ls -lh /opt/coder-agent-init.sh
+```
+
+### Code-server not appearing
+
+1. Wait ~60-90 seconds for initial tool installation to complete
+2. Check agent logs: `sudo journalctl -u coder-agent -f`
+3. Verify code-server is running: `sudo systemctl status coder-agent` should show code-server process
+4. Check for "apphealth: workspace app healthy" messages in agent logs
 
 ### Persistent disk not mounting
 
 1. Verify disk exists in GCP Console
 2. Check disk is in the same zone as the instance
 3. Ensure disk isn't attached to another instance
+
+### Slow startup on e2-micro
+
+The e2-micro instance (1 GB RAM) can be slow to install packages. The agent connects quickly (~30 seconds), but background tool installation (Node.js, build-essential) may take 5-10 minutes. Consider using e2-medium for faster setup.
 
 ## Architecture Details
 

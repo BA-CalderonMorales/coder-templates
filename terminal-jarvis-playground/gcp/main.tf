@@ -78,6 +78,25 @@ resource "coder_agent" "main" {
   startup_script = <<-EOT
     set -e
 
+    # Install additional tools after agent connects
+    # This runs as the coder user after the agent is up
+    if [ ! -f ~/.tools_installed ]; then
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        git \
+        wget \
+        vim \
+        htop \
+        build-essential
+
+      # Install Node.js 20.x
+      if ! command -v node &> /dev/null; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+        sudo apt-get install -y nodejs
+      fi
+
+      touch ~/.tools_installed
+    fi
+
     # Install code-server
     if ! command -v code-server &> /dev/null; then
       curl -fsSL https://code-server.dev/install.sh | sh -s -- --version 4.96.2
@@ -236,33 +255,43 @@ resource "google_compute_instance" "workspace" {
     # Wait for cloud-init to finish to avoid apt lock conflicts
     cloud-init status --wait || true
 
-    # Update package lists and install dependencies
+    # Fix any interrupted dpkg processes
+    dpkg --configure -a || true
+
+    # Wait for any apt locks to be released
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
+      echo "Waiting for apt lock to be released..."
+      sleep 2
+    done
+
+    # Update package lists and install only critical dependencies for agent
+    # Note: Keep this minimal to speed up initial connection
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       curl \
-      sudo \
-      git \
-      wget \
-      ca-certificates \
-      htop \
-      vim \
-      build-essential
+      ca-certificates
 
     # Create coder user if it doesn't exist
+    # Install sudo first since it's needed for the coder user
+    if ! command -v sudo &>/dev/null; then
+      apt-get install -y sudo
+    fi
+
     if ! id coder &>/dev/null; then
       useradd -m -s /bin/bash coder
       usermod -aG sudo coder
       echo "coder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/coder
     fi
 
-    # Install Node.js 20.x (matching Dockerfile)
-    if ! command -v node &> /dev/null; then
-      curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-      apt-get install -y nodejs
-    fi
+    # Write the Coder agent init script to a file
+    cat > /opt/coder-agent-init.sh <<'INITSCRIPT'
+${coder_agent.main.init_script}
+INITSCRIPT
+    chmod +x /opt/coder-agent-init.sh
+    chown coder:coder /opt/coder-agent-init.sh
 
     # Create systemd service for Coder agent
-    cat > /etc/systemd/system/coder-agent.service <<EOF
+    cat > /etc/systemd/system/coder-agent.service <<'SVCEOF'
 [Unit]
 Description=Coder Agent
 After=network-online.target
@@ -271,14 +300,17 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=coder
+WorkingDirectory=/home/coder
 Environment="CODER_AGENT_TOKEN=${coder_agent.main.token}"
-ExecStart=/bin/bash -c '${replace(coder_agent.main.init_script, "'", "'\\''")}'
+ExecStart=/opt/coder-agent-init.sh
 Restart=on-failure
 RestartSec=5s
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
-EOF
+SVCEOF
 
     # Start the Coder agent service
     systemctl daemon-reload
