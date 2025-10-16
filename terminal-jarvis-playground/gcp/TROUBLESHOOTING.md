@@ -61,7 +61,7 @@ sudo tail -50 /var/log/syslog
 
 ### Attempt 3: Docker-in-VM architecture
 **Date**: 2025-10-15
-**File**: main.tf lines 223-256 (current)
+**File**: main.tf.backup-docker-approach
 **Approach**:
 - Install Docker on the GCP VM via startup script
 - Run workspace as a Docker container on the VM
@@ -71,6 +71,31 @@ sudo tail -50 /var/log/syslog
 - Replaced manual `coder_app` with `code-server` module (registry.coder.com/modules/code-server/coder)
 - Rewrote `metadata_startup_script` to install Docker and run container
 **Status**: FAILED - Still hanging during workspace creation
+**Root Cause**: Using fallback ubuntu:22.04 image without dependencies needed by init_script
+
+### Attempt 4: Bare VM without Docker (CURRENT)
+**Date**: 2025-10-16
+**File**: main.tf lines 228-290
+**Approach**:
+- Remove Docker entirely
+- Install dependencies directly on VM (curl, git, Node.js, build tools)
+- Create coder user with sudo access
+- Run Coder agent as systemd service
+- Agent runs directly on VM as coder user
+**Changes Made**:
+- Rewrote `metadata_startup_script` to install dependencies via apt
+- Added cloud-init wait to avoid apt lock conflicts
+- Created systemd service unit for agent with auto-restart
+- Added comprehensive logging (syslog + journalctl)
+- Installed Node.js 20.x to match local Docker template
+- Agent startup_script installs code-server on first run
+**Benefits**:
+- No Docker complexity or networking issues
+- Easy debugging via `journalctl -u coder-agent`
+- Direct SSH access to see agent logs in real-time
+- Matches most official Coder GCP examples
+- All dependencies explicitly installed and verified
+**Status**: TESTING
 
 ## Current Architecture Issues
 
@@ -184,42 +209,50 @@ Current firewall rule (line 172-183) only allows SSH. The Coder agent needs OUTB
 4. Is the `CODER_AGENT_TOKEN` environment variable set correctly?
 5. Does the code-server module work without Docker on a bare VM?
 
-## Recommended Debugging Session
+## Recommended Debugging Session (Attempt 4 - Bare VM)
 
 ```bash
 # 1. SSH into VM
-gcloud compute ssh <instance-name> --zone=us-central1-a
+gcloud compute ssh coder-<owner>-<workspace> \
+  --zone=us-central1-a \
+  --project=terminal-jarvis-playground
 
-# 2. Check if Docker installed
-docker --version
+# 2. Check startup script logs
+sudo journalctl -u google-startup-scripts.service --no-pager | tail -100
 
-# 3. Check running containers
-docker ps -a
+# 3. Check Coder agent service status
+sudo systemctl status coder-agent
 
-# 4. If container exists, check logs
-docker logs <container-name>
+# 4. View Coder agent logs in real-time
+sudo journalctl -u coder-agent -f
 
-# 5. If no container, check startup script status
-sudo journalctl -u google-startup-scripts.service -n 100
+# 5. Check if coder user exists
+id coder
 
-# 6. Try to manually run the container
-CONTAINER_NAME="test-coder"
-docker run -it --rm \
-  -e CODER_AGENT_TOKEN="<get-from-coder-ui-or-logs>" \
-  ubuntu:22.04 \
-  bash
+# 6. Check installed dependencies
+node --version
+git --version
+code-server --version
 
-# 7. Inside container, manually run agent
-curl -fsSL https://2dvhb92th5644.pit-1.try.coder.app/bin/coder-linux-amd64 -o /tmp/coder
-chmod +x /tmp/coder
-export CODER_AGENT_TOKEN="<token>"
-export CODER_AGENT_URL="https://2dvhb92th5644.pit-1.try.coder.app/"
-/tmp/coder agent
+# 7. Check if agent binary downloaded
+sudo ls -lh /tmp/coder* 2>/dev/null || echo "No agent binary found"
+
+# 8. Test network connectivity to Coder server (extract URL from service file)
+CODER_URL=$(grep -oP 'https://[^/]+\.coder\.app' /etc/systemd/system/coder-agent.service || echo "URL not found")
+echo "Coder server URL: $CODER_URL"
+curl -I "$CODER_URL/"
+
+# 9. If agent service failed, try manual start for debugging
+sudo su - coder
+# Token is in the systemd service file, extract it:
+# grep CODER_AGENT_TOKEN /etc/systemd/system/coder-agent.service
+export CODER_AGENT_TOKEN="<token-from-service-file>"
+# Paste the init_script commands manually to see detailed output
 ```
 
 ## Last Updated
 
-2025-10-15
+2025-10-16 - Attempt 4: Bare VM approach implemented
 
 ## References
 

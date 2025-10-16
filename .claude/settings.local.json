@@ -8,7 +8,8 @@
       "Bash(test:*)",
       "Bash(./package.linux.sh)",
       "Bash(tar:*)",
-      "Bash(./package.linux.sh:*)"
+      "Bash(./package.linux.sh:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []
