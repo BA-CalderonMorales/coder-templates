@@ -9,7 +9,9 @@
       "Bash(./package.linux.sh)",
       "Bash(tar:*)",
       "Bash(./package.linux.sh:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(terraform validate)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
