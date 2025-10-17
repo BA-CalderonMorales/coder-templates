@@ -5,8 +5,10 @@
 ### - System Monitoring: Real-time resource usage in the dashboard
 ### - Git Integration: Automatically configured with your user details
 ### - GCP Compute Engine: Bare VM with agent running directly (no Docker)
+### - Terminal Jarvis Tooling: Rust, Python, Node.js, and development tools
+### - Optional Archestra.ai: AI agent security platform (feature flag)
 
-### This template creates a GCP Compute Engine development environment with code-server running directly on the VM for maximum simplicity and debuggability.
+### This template creates a GCP Compute Engine development environment optimized for Terminal Jarvis development with optional Archestra.ai integration.
 
 ### Provider Configuration
 terraform {
@@ -59,6 +61,18 @@ variable "gcp_credentials" {
   sensitive   = true
 }
 
+variable "enable_archestra" {
+  description = "Enable Archestra.ai platform for AI agent security (requires Docker)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_docker" {
+  description = "Enable Docker daemon (required for Archestra, optional otherwise)"
+  type        = bool
+  default     = false
+}
+
 ### Data Sources
 provider "google" {
   project     = var.project_id
@@ -78,15 +92,25 @@ resource "coder_agent" "main" {
   startup_script = <<-EOT
     set -e
 
-    # Install additional tools after agent connects
-    # This runs as the coder user after the agent is up
+    # Terminal Jarvis development environment setup
     if [ ! -f ~/.tools_installed ]; then
+      echo "Installing Terminal Jarvis development tools..."
+
+      # Core dependencies
       sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
         git \
+        git-lfs \
         wget \
         vim \
         htop \
-        build-essential
+        build-essential \
+        pkg-config \
+        libssl-dev \
+        python3 \
+        python3-pip \
+        python3-venv \
+        ca-certificates \
+        gh
 
       # Install Node.js 20.x
       if ! command -v node &> /dev/null; then
@@ -94,7 +118,33 @@ resource "coder_agent" "main" {
         sudo apt-get install -y nodejs
       fi
 
+      # Install Rust toolchain (Terminal Jarvis requires Rust 1.87+)
+      if ! command -v rustc &> /dev/null; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.87.0
+        source $HOME/.cargo/env
+        rustup component add clippy rustfmt
+      fi
+
+      # Install uv (Python package manager)
+      if ! command -v uv &> /dev/null; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
+
+      ${var.enable_docker || var.enable_archestra ? <<-DOCKER
+      # Install Docker
+      if ! command -v docker &> /dev/null; then
+        curl -fsSL https://get.docker.com | sudo sh
+        sudo usermod -aG docker coder
+      fi
+      DOCKER
+  : ""}
+
       touch ~/.tools_installed
+    fi
+
+    # Ensure Rust environment is loaded
+    if [ -f $HOME/.cargo/env ]; then
+      source $HOME/.cargo/env
     fi
 
     # Install code-server
@@ -102,71 +152,88 @@ resource "coder_agent" "main" {
       curl -fsSL https://code-server.dev/install.sh | sh -s -- --version 4.96.2
     fi
 
+    ${var.enable_archestra ? <<-ARCHESTRA
+    # Start Archestra.ai platform
+    if ! docker ps | grep -q archestra-platform; then
+      echo "Starting Archestra.ai platform..."
+      docker run -d \
+        --name archestra-platform \
+        --restart unless-stopped \
+        -p 3000:3000 \
+        -p 9000:9000 \
+        archestra/platform:latest || true
+    fi
+    ARCHESTRA
+: ""}
+
     # Prepare user home with default files on first start
     if [ ! -f ~/.init_done ]; then
       cp -rT /etc/skel ~
       touch ~/.init_done
     fi
-
-    # Add any commands that should be executed at workspace startup here
   EOT
 
-  env = {
-    GIT_AUTHOR_NAME     = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
-    GIT_AUTHOR_EMAIL    = data.coder_workspace_owner.me.email
-    GIT_COMMITTER_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
-    GIT_COMMITTER_EMAIL = data.coder_workspace_owner.me.email
-  }
+env = {
+  GIT_AUTHOR_NAME        = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
+  GIT_AUTHOR_EMAIL       = data.coder_workspace_owner.me.email
+  GIT_COMMITTER_NAME     = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
+  GIT_COMMITTER_EMAIL    = data.coder_workspace_owner.me.email
+  RUST_LOG               = "debug"
+  CARGO_TERM_COLOR       = "always"
+  CARGO_INCREMENTAL      = "1"
+  RUST_BACKTRACE         = "1"
+  ARCHESTRA_API_BASE_URL = var.enable_archestra ? "http://localhost:9000" : ""
+}
 
-  metadata {
-    display_name = "CPU Usage"
-    key          = "0_cpu_usage"
-    script       = "coder stat cpu"
-    interval     = 10
-    timeout      = 1
-  }
+metadata {
+  display_name = "CPU Usage"
+  key          = "0_cpu_usage"
+  script       = "coder stat cpu"
+  interval     = 10
+  timeout      = 1
+}
 
-  metadata {
-    display_name = "RAM Usage"
-    key          = "1_ram_usage"
-    script       = "coder stat mem"
-    interval     = 10
-    timeout      = 1
-  }
+metadata {
+  display_name = "RAM Usage"
+  key          = "1_ram_usage"
+  script       = "coder stat mem"
+  interval     = 10
+  timeout      = 1
+}
 
-  metadata {
-    display_name = "Home Disk"
-    key          = "3_home_disk"
-    script       = "coder stat disk --path $${HOME}"
-    interval     = 60
-    timeout      = 1
-  }
+metadata {
+  display_name = "Home Disk"
+  key          = "3_home_disk"
+  script       = "coder stat disk --path $${HOME}"
+  interval     = 60
+  timeout      = 1
+}
 
-  metadata {
-    display_name = "CPU Usage (Host)"
-    key          = "4_cpu_usage_host"
-    script       = "coder stat cpu --host"
-    interval     = 10
-    timeout      = 1
-  }
+metadata {
+  display_name = "CPU Usage (Host)"
+  key          = "4_cpu_usage_host"
+  script       = "coder stat cpu --host"
+  interval     = 10
+  timeout      = 1
+}
 
-  metadata {
-    display_name = "Memory Usage (Host)"
-    key          = "5_mem_usage_host"
-    script       = "coder stat mem --host"
-    interval     = 10
-    timeout      = 1
-  }
+metadata {
+  display_name = "Memory Usage (Host)"
+  key          = "5_mem_usage_host"
+  script       = "coder stat mem --host"
+  interval     = 10
+  timeout      = 1
+}
 
-  metadata {
-    display_name = "Load Average (Host)"
-    key          = "6_load_host"
-    script       = <<EOT
+metadata {
+  display_name = "Load Average (Host)"
+  key          = "6_load_host"
+  script       = <<EOT
       echo "`cat /proc/loadavg | awk '{ print $1 }'` `nproc`" | awk '{ printf "%0.2f", $1/$2 }'
     EOT
-    interval     = 60
-    timeout      = 1
-  }
+  interval     = 60
+  timeout      = 1
+}
 }
 
 ### Development Tools
@@ -178,6 +245,41 @@ module "code-server" {
 
   agent_id = coder_agent.main.id
   order    = 1
+}
+
+### Archestra.ai Apps (only when enabled)
+resource "coder_app" "archestra_ui" {
+  count        = var.enable_archestra ? 1 : 0
+  agent_id     = coder_agent.main.id
+  slug         = "archestra-ui"
+  display_name = "Archestra UI"
+  url          = "http://localhost:3000"
+  icon         = "https://www.archestra.ai/favicon.ico"
+  subdomain    = false
+  share        = "owner"
+
+  healthcheck {
+    url       = "http://localhost:3000"
+    interval  = 5
+    threshold = 6
+  }
+}
+
+resource "coder_app" "archestra_api" {
+  count        = var.enable_archestra ? 1 : 0
+  agent_id     = coder_agent.main.id
+  slug         = "archestra-api"
+  display_name = "Archestra API Proxy"
+  url          = "http://localhost:9000"
+  icon         = "https://www.archestra.ai/favicon.ico"
+  subdomain    = false
+  share        = "owner"
+
+  healthcheck {
+    url       = "http://localhost:9000"
+    interval  = 5
+    threshold = 6
+  }
 }
 
 ### GCP Infrastructure
