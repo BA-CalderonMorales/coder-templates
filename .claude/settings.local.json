@@ -11,7 +11,11 @@
       "Bash(./package.linux.sh:*)",
       "Bash(cp:*)",
       "Bash(terraform validate)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:www.archestra.ai)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git tag:*)",
+      "Bash(terraform fmt:*)"
     ],
     "deny": [],
     "ask": []
