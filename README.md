@@ -1,6 +1,6 @@
 # Coder Templates
 
-Terraform-based workspace templates for the Terminal-Jarvis development environment. They are portable across Docker and cloud providers and focus on low-cost defaults with pre-configured toolchains (Node.js 20, Python 3, Rust, and common utilities).
+Terraform-based workspace templates for the Terminal-Jarvis development environment. They are portable across Docker and cloud providers, and focus on low-cost defaults with pre-configured toolchains (Node.js 20, Python 3, Rust, and common utilities).
 
 ## Quick links
 
