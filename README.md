@@ -1,6 +1,6 @@
 # Coder Templates
 
-Terraform-based workspace templates for the Terminal-Jarvis development environment. They are portable across Docker and cloud providers and focus on low-cost defaults with pre-configured toolchains (Node.js 20, Python 3, Rust, and common utilities). This repository is the centralized home for multiple Coder templates (not just Terminal-Jarvis). It began as a way to validate the Terminal-Jarvis workspace and now tracks additional and future templates in one place.
+Terraform-based workspace templates for the Terminal-Jarvis development environment. They are portable across Docker and cloud providers and focus on low-cost defaults with pre-configured toolchains (Node.js 20, Python 3, Rust, and common utilities).
 
 ## Quick links
 
@@ -8,6 +8,11 @@ Terraform-based workspace templates for the Terminal-Jarvis development environm
 - Templates: `terminal-jarvis-playground/local-docker` and `terminal-jarvis-playground/gcp`
 - Canonical documentation (source of truth): https://BA-CalderonMorales.github.io/my-life-as-a-dev/projects/active/coder-templates/
 - Legacy in-repo docs (being migrated): `docs/`
+
+## Repository scope
+
+- Centralized home for multiple Coder templates (not just Terminal-Jarvis).
+- Originated as a way to validate the Terminal-Jarvis workspace; now tracks additional and future templates in one place.
 
 ## What's included
 
