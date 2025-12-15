@@ -2,12 +2,14 @@
 
 Terraform-based workspace templates for the Terminal-Jarvis development environment. They are portable across Docker and cloud providers, and focus on low-cost defaults with pre-configured toolchains (Node.js 20, Python 3, Rust, and common utilities).
 
+This repository is currently a temporary placeholder while content migrates into the `my-life-as-a-dev` project. Legacy materials live in `archive/` to ease that handoff.
+
 ## Quick links
 
 - Packaging scripts: `./package.{linux|mac|windows}.sh`
 - Templates: `terminal-jarvis-playground/local-docker` and `terminal-jarvis-playground/gcp`
 - Canonical documentation (source of truth): https://BA-CalderonMorales.github.io/my-life-as-a-dev/projects/active/coder-templates/
-- Legacy in-repo docs (being migrated): `docs/`
+- Legacy in-repo materials (temporary placeholder for migration): `archive/`
 
 ## Repository scope
 
@@ -30,7 +32,7 @@ Terraform-based workspace templates for the Terminal-Jarvis development environm
 - Automated linting and validation pipeline (tflint, trivy/grype)
 - Secret management patterns (dotfiles, cloud secret managers)
 
-See `CLAUDE.md` for detailed roadmap and guidelines.
+See `AGENTS.md` for AI agent guidance and repository workflow expectations.
 
 ## Templates at a glance
 
@@ -66,22 +68,22 @@ Key variables:
 - Architecture: ARM64 support matters for AWS t4g and Apple Silicon; use `docker buildx --platform linux/amd64,linux/arm64`.
 - Observability: dashboard metrics include CPU, RAM, disk, load, and swap (see `main.tf` in `local-docker` for implementation).
 
-See `docs/deployment_models/limitations.md` for platform-specific caveats. These values mirror the external documentation; update both locations together when constraints change.
+See `archive/deployment_models/limitations.md` for platform-specific caveats. These values mirror the external documentation; update both locations together when constraints change.
 
 ## Documentation source of truth
 
 - Primary docs now live at: https://BA-CalderonMorales.github.io/my-life-as-a-dev/projects/active/coder-templates/
-- The `docs/` folder remains as legacy reference while content is migrated; prefer updating the external site first, then mirror only the minimal pointers needed here.
+- The `archive/` folder contains legacy reference content as a temporary placeholder while material migrates into https://github.com/BA-CalderonMorales/my-life-as-a-dev; prefer updating the external site first, then mirror only the minimal pointers needed here.
 - Template READMEs stay in-repo for deployment specifics; keep them consistent with the external site.
-- If the external site is unavailable, fall back to template READMEs and `docs/` until it is restored.
-- Use `docs/` for short link lists or operational notes only; full deployment guides and explanations should live on the external site. Migration is ongoing, so move narrative content out of `docs/` when you touch it.
+- If the external site is unavailable, fall back to template READMEs and `archive/` until it is restored.
+- Use `archive/` for short link lists or operational notes only; full deployment guides and explanations should live on the external site. Migration is ongoing, so move narrative content out of `archive/` when you touch it.
 
 ## Doc drift prevention & maintenance
 
 1. Treat the external site as the canonical source. When changing templates, open a companion PR (a docs PR shipped alongside the template change) in the documentation site repository (currently https://github.com/BA-CalderonMorales/my-life-as-a-dev) and update the corresponding page there. Adjust the repository reference here if the docs site ever moves.
 2. Cross-link the two PRs and note the docs update in the changelog or commit message.
-3. Keep `docs/` limited to brief pointers/operational notes until migration is complete; avoid duplicating full guides.
-4. During releases or notable template changes, run a quick docs check: verify README links to the external site, confirm variable defaults match Terraform, and update `docs/deployment_models/limitations.md` if resource ceilings change.
+3. Keep `archive/` limited to brief pointers/operational notes until migration is complete; avoid duplicating full guides.
+4. During releases or notable template changes, run a quick docs check: verify README links to the external site, confirm variable defaults match Terraform, and update `archive/deployment_models/limitations.md` if resource ceilings change.
 5. When possible, automate syncs (link checks or generated docs) so the manual steps above become verification rather than authoring.
 
 ## Development and validation
@@ -97,7 +99,7 @@ terraform fmt -check
 docker build -t test-image:latest .
 ```
 
-Use the devcontainer (`.devcontainer/`) for a consistent contributor environment. Follow `.github/copilot-instructions.md` and `CLAUDE.md` for style guidance (no emojis, concise comments, semantic doc headers).
+Use the devcontainer (`.devcontainer/`) for a consistent contributor environment. Follow `.github/copilot-instructions.md` and `AGENTS.md` for style guidance (no emojis, concise comments, semantic doc headers).
 
 ## License
 
