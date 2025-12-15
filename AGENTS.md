@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents (e.g., GitHub Copilot, Claude Code) when working with code in this repository.
 
 ## Repository Purpose
 
@@ -83,12 +83,12 @@ The template uses two Terraform providers:
 ## Deployment Models
 
 Documented deployment guides exist for:
-- **Docker Desktop** (`docs/deployment_models/DockerDesktop.md`): Local baseline, fast iteration
-- **GCP** (`docs/deployment_models/GCP.md`): e2-micro, Always Free tier
-- **AWS** (`docs/deployment_models/AWS.md`): t2.micro/t4g.micro, 12-month free tier
-- **Azure** (`docs/deployment_models/Azure.md`): B1s, constrained CPU credits
+- **Docker Desktop** (`archive/deployment_models/DockerDesktop.md`): Local baseline, fast iteration
+- **GCP** (`archive/deployment_models/GCP.md`): e2-micro, Always Free tier
+- **AWS** (`archive/deployment_models/AWS.md`): t2.micro/t4g.micro, 12-month free tier
+- **Azure** (`archive/deployment_models/Azure.md`): B1s, constrained CPU credits
 
-See `docs/deployment_models/limitations.md` for comprehensive resource constraints.
+See `archive/deployment_models/limitations.md` for comprehensive resource constraints.
 
 ## Critical Constraints
 
@@ -109,7 +109,7 @@ See `docs/deployment_models/limitations.md` for comprehensive resource constrain
 
 When adding new Terraform variables to `main.tf`:
 1. Document in root `README.md`
-2. Update relevant deployment model docs in `docs/deployment_models/`
+2. Update relevant deployment model docs in `archive/deployment_models/`
 3. Provide sensible defaults that work without flags
 
 Planned variables (not yet implemented):
