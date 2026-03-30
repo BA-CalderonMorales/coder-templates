@@ -17,6 +17,9 @@ This repository is currently a temporary placeholder while content migrates into
 - [Development and validation](#development-and-validation)
 - [License](#license)
 
+
+> *Note: If these links do not respond in the GitHub Mobile app, try viewing in a browser. This is a known platform limitation.*
+
 ## Quick links
 
 - Packaging scripts: `./package.{linux|mac|windows}.sh`
