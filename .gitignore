@@ -10,6 +10,7 @@
 *.key
 *.cert
 *.crt
+*.json
 
 # IDE and editor files
 .idea/
@@ -19,3 +20,14 @@
 
 # Logs
 *.log
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+
+# Coder
+.coder/

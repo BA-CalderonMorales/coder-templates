@@ -1,0 +1,48 @@
+{
+  "name": "Coder Templates Development",
+  "build": {
+    "dockerfile": "./Dockerfile"
+  },
+  "remoteUser": "codespace",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "forwardPorts": [],
+  "containerEnv": {
+    "DOCKER_BUILDKIT": "1"
+  },
+  "updateContentCommand": "bash .devcontainer/scripts/setup-dev-environment.sh",
+  "postCreateCommand": [
+    "bash",
+    ".devcontainer/scripts/setup-dev-environment.sh"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "files.exclude": {
+          "**/.terraform": true,
+          "**/.terraform.lock.hcl": false
+        },
+        "search.exclude": {
+          "**/.terraform": true,
+          "**/*.tar": true
+        },
+        "editor.formatOnSave": true,
+        "terraform.languageServer.enable": true,
+        "[terraform]": {
+          "editor.defaultFormatter": "hashicorp.terraform",
+          "editor.formatOnSave": true
+        }
+      }
+    }
+  },
+  "shutdownAction": "stopContainer",
+  "waitFor": "postCreateCommand"
+}
