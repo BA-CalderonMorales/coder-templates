@@ -4,6 +4,19 @@ Terraform-based workspace templates for the Terminal-Jarvis development environm
 
 This repository is currently a temporary placeholder while content migrates into the `my-life-as-a-dev` project. Legacy materials live in `archive/` to ease that handoff.
 
+## Table of Contents
+
+- [Quick links](#quick-links)
+- [Repository scope](#repository-scope)
+- [What's included](#whats-included)
+- [Templates at a glance](#templates-at-a-glance)
+- [Workflow](#workflow)
+- [Resource and observability essentials](#resource-and-observability-essentials)
+- [Documentation source of truth](#documentation-source-of-truth)
+- [Doc drift prevention & maintenance](#doc-drift-prevention--maintenance)
+- [Development and validation](#development-and-validation)
+- [License](#license)
+
 ## Quick links
 
 - Packaging scripts: `./package.{linux|mac|windows}.sh`
