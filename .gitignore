@@ -31,3 +31,6 @@
 
 # Coder
 .coder/
+
+# Temporary files folder - never commit
+tmp/
